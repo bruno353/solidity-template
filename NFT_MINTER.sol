@@ -17,7 +17,7 @@ contract SmartContract is ERC721, Ownable {
     string uri;
   }
 
-  constructor() ERC721("Smart Contract", "SC") {}
+  constructor() ERC721("Fading Hope", "FH") {}
 
   function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal {
     _tokenURIs[tokenId] = _tokenURI;
@@ -35,7 +35,7 @@ contract SmartContract is ERC721, Ownable {
     return _tokenURI;
   }
 
-  function getAllTokens() public view returns (RenderToken[] memory) {
+  function get_nfts_from_user() public view returns (RenderToken[] memory) {
     uint256 lastestId = _tokenIds.current();
     uint256 counter = 0;
     RenderToken[] memory res = new RenderToken[](lastestId);
