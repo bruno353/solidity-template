@@ -12,7 +12,7 @@ contract SmartContract is ERC721, Ownable {
   Counters.Counter _tokenIds;
   mapping(uint256 => string) _tokenURIs;
 
-  struct RenderToken {
+  struct RenderNFT {
     uint256 id;
     string uri;
   }
@@ -35,14 +35,14 @@ contract SmartContract is ERC721, Ownable {
     return _tokenURI;
   }
 
-  function get_nfts_from_user() public view returns (RenderToken[] memory) {
+  function get_nfts_from_user() public view returns (RenderNFT[] memory) {
     uint256 lastestId = _tokenIds.current();
     uint256 counter = 0;
-    RenderToken[] memory res = new RenderToken[](lastestId);
+    RenderNFT[] memory res = new RenderNFT[](lastestId);
     for (uint256 i = 0; i < lastestId; i++) {
       if (_exists(counter)) {
         string memory uri = tokenURI(counter);
-        res[counter] = RenderToken(counter, uri);
+        res[counter] = RenderNFT(counter, uri);
       }
       counter++;
     }
