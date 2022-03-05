@@ -34,7 +34,8 @@ contract SmartContract is ERC721, Ownable {
   function mint(string memory uri, uint hp, uint attackDamage) public returns (uint256) {
     uint256 newId = _tokenIds.current();
     _tokenDetails[newId] = RenderNFT(uri, hp, attackDamage);
-    nftHolderCount[msg.sender] = nftHolderCount[msg.sender].add(1);
+    nftHolderCount[msg.sender] = nftHolderCount[msg.sender] + 1;
+    nftToHolder[newId] = msg.sender;
     _mint(msg.sender, newId);
     _tokenIds.increment();
     return newId;
@@ -45,7 +46,7 @@ contract SmartContract is ERC721, Ownable {
         uint256 lastestId = _tokenIds.current();
         uint[] memory result = new uint[](nftHolderCount[_owner]);
         uint counter = 0;
-        for (uint i = 0; i < _tokenDetails.length; i++) {
+        for (uint i = 0; i < lastestId; i++) {
         if (nftToHolder[i] == _owner) {
             result[counter] = i;
             counter++;
@@ -58,4 +59,4 @@ contract SmartContract is ERC721, Ownable {
   function getNFTsById(uint256 _tokenId) public view returns(RenderNFT memory){
 
       return _tokenDetails[_tokenId];
-  }
+  }}
