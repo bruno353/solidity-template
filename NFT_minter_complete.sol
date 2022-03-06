@@ -37,6 +37,7 @@ contract SmartContract is ERC721, Ownable {
     nftHolderCount[msg.sender] = nftHolderCount[msg.sender] + 1;
     nftToHolder[newId] = msg.sender;
     _mint(msg.sender, newId);
+    _setTokenURI(newId, uri);
     _tokenIds.increment();
     return newId;
   }
