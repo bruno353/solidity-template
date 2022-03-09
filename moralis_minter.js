@@ -1,12 +1,12 @@
 import React from "react";
 import { Card, Typography, Button } from "antd";
 import { useMoralis, useWeb3Contract } from "react-moralis";
-import { abi } from "../contracts/ERC1155CustomUpgradeableV1.json";
+import { abi } from "./MasterContract.json";
 
 export default function QuickStart() {
   const { account } = useMoralis();
   const { runContractFunction, isLoading } = useWeb3Contract({
-    functionName: "mint",
+    functionName: "freeMintURI",
     abi,
     contractAddress: "0xC34541DEec223F4a24bD7Eeda28D56cA16c927fd",
     params: {
