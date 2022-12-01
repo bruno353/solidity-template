@@ -8,9 +8,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-//THIS IS THE TIME TOKEN -> STAKEABLE TOKEN.
 
-contract ERC20Stakeable is ERC20, Ownable {
+contract ERC20WhitelistedAddresses is ERC20, Ownable {
     
     constructor(string memory _name, string memory _symbol)
         ERC20(_name, _symbol)
