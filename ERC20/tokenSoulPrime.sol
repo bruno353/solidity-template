@@ -123,7 +123,7 @@ contract TGE is ERC20, Ownable, ReentrancyGuard {
 
     }
 
-    function withdrawTeamTokens() public onlyOwner nonReentrant isContractEnabled {
+    function withdrawTeamTokens() public nonReentrant isContractEnabled {
         require(walletToVestingCounter[teamWallet] < 48, "Todos os tokens relacionados a este fundo ja foram mintados");
 
         if(startTime + 2_592_000 + (walletToVestingCounter[teamWallet] * 2_592_000) <= block.timestamp) {
