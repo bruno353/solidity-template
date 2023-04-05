@@ -7,10 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-//tirar o staking time
-//botar 5 milhões (tirando do publicsale) para uma pool inicial de staking
-//revisar os cálculos de distribuicao
-
 
 contract TGE is ERC20, Ownable, ReentrancyGuard {
 
