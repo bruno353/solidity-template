@@ -46,7 +46,7 @@ contract TGE is Ownable, ReentrancyGuard {
 
     function _initialTokenDistribution() private { 
         uint256[8] memory tokenAmounts = [
-            uint256(140_000_000_000000000000000000),
+            uint256(196_250_000_000000000000000000),
             uint256(95_000_000_000000000000000000),
             uint256(80_000_000_000000000000000000),
             uint256(18_750_000_000000000000000000),
@@ -68,7 +68,7 @@ contract TGE is Ownable, ReentrancyGuard {
 
         uint256[3] memory vestingAmounts = [uint256(13_750_000_000000000000000000), uint256(22_000_000_000000000000000000), uint256(11_000_000_000000000000000000)];
 
-        uint256[3] memory vestingDurations = [uint256(10), uint256(11), uint256(11)];
+        uint256[3] memory vestingDurations = [uint256(7_776_000), uint256(15_552_000), uint256(18_144_000)];
 
         _withdrawVestedTokens(privateSaleWallet, vestingAmounts, vestingDurations);
     }
@@ -81,8 +81,8 @@ contract TGE is Ownable, ReentrancyGuard {
         //considerando que um mês = 30 dias -> 2592000 segundos
 
         uint256 vestingAmount = 1_312_500_000000000000000000;
-        uint256 cliffDuration = 11;
-        uint256 monthlyDuration = 11;
+        uint256 cliffDuration = 31_536_000;
+        uint256 monthlyDuration = 2_592_000;
 
         _withdrawVestedTokensWithCliff(developmentWallet, vestingAmount, cliffDuration, monthlyDuration);
     }
@@ -95,8 +95,8 @@ contract TGE is Ownable, ReentrancyGuard {
         //considerando que um mês = 30 dias -> 2592000 segundos
 
         uint256 vestingAmount = 937_500_000000000000000000;
-        uint256 cliffDuration = 11;
-        uint256 monthlyDuration = 11;
+        uint256 cliffDuration = 31_536_000;
+        uint256 monthlyDuration = 2_592_000;
 
         _withdrawVestedTokensWithCliff(partnersWallet, vestingAmount, cliffDuration, monthlyDuration);
     }
