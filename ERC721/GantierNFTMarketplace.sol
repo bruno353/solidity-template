@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
-abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
+contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
 
     Counters.Counter public _tokenIds;
@@ -21,7 +21,7 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
     Counters.Counter public _NFTsMintedByOwner;
     uint256 public maxSupply = 3333;
     uint256 public marketplaceFee = 3;  // base 100 - 3 igual a 3%
-    bool public isEnabled;
+    bool public isEnabled = true;
 
     // Ambos possuem 6 casas decimais
     IERC20 public USDCAddress;
@@ -44,7 +44,7 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
     }
     mapping(uint256 => Item) public Items; //id => Item
 
-    constructor (address _USDCAddress, address _USDTAddress, uint256 _marketplaceFee) ERC721("Gantier", "GA")  {
+    constructor (address _USDCAddress, address _USDTAddress, uint256 _marketplaceFee) Ownable(msg.sender) ERC721("Gantier", "GA")  {
         USDCAddress = IERC20(_USDCAddress);
         USDTAddress = IERC20(_USDTAddress);
         marketplaceFee = _marketplaceFee;
@@ -90,14 +90,28 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         }
     }
 
+    // funcao para owner poder administrar transferências de nfts
+    function transferNFTOwner(uint256 _tokenId, address _from, address _to)
+        public 
+        onlyOwner {
+        _transfer(_from, _to, _tokenId);
+    }
+
+    function burnNFTOwner(uint256 _tokenId)
+        public 
+        onlyOwner {
+        _burn(_tokenId);
+    }
+
+
     //MARKETPLACE:
     event itemAddedForSale(uint256 id, uint256 price, address seller);
     event itemSold(uint256 id, uint256 price, address seller, address buyer, PaymentType _paymentType);  
 
 
     function putItemForSale(uint256 _tokenId, uint256 _price, PaymentType _paymentType)
-        external 
-        payable {
+        public 
+        {
         require(ownerOf(_tokenId) == msg.sender, "You are not the token owner");
         require(_price > 0 , "Price needs to be greater than 0");
 
@@ -108,6 +122,21 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         _transfer(msg.sender, address(this), _tokenId);
 
         emit itemAddedForSale(_tokenId, _price, msg.sender);
+    }
+
+    // funcao para owner botar itens para venda
+    function putItemForSaleOwner(uint256 _tokenId, uint256 _price, address seller, PaymentType _paymentType)
+        public 
+        onlyOwner {
+        require(_price > 0 , "Price needs to be greater than 0");
+
+        Items[_tokenId].price = _price;
+        Items[_tokenId].seller = seller;
+        Items[_tokenId].paymentType = _paymentType;
+
+        _transfer(seller, address(this), _tokenId);
+
+        emit itemAddedForSale(_tokenId, _price, seller);
     }
 
     // Creates the sale of a marketplace item 
@@ -125,14 +154,14 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         uint256 priceEmit = Items[_tokenId].price;
 
         Items[_tokenId].price = 0;
-
-
-        _transfer(address(this), msg.sender, _tokenId);
+        Items[_tokenId].seller = msg.sender;
         
         //3% of royalties
-        payable(Items[_tokenId].seller).transfer(msg.value * 97/100);
+        payable(Items[_tokenId].seller).transfer((msg.value * 97) / 100);
 
         _itemsSolds.increment();
+        
+        _transfer(address(this), msg.sender, _tokenId);
 
         emit itemSold(_tokenId, priceEmit, Items[_tokenId].seller, msg.sender, PaymentType(0));
 
@@ -167,6 +196,9 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         uint256 priceEmit = Items[_tokenId].price;
 
         Items[_tokenId].price = 0;
+        Items[_tokenId].seller = msg.sender;
+
+        _transfer(address(this), msg.sender, _tokenId);
 
         _itemsSolds.increment();
 
@@ -197,7 +229,7 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
 
     function withdrawERC20(address _to, uint256 amount, address _contractAddress) public onlyOwner {
         IERC20 contractAddress = IERC20(_contractAddress);
-        bool sent = contractAddress.transferFrom(address(this), _to, amount);
+        bool sent = contractAddress.transfer(_to, amount);
         require(sent, "Failed to send ERC20");
     }
 }
