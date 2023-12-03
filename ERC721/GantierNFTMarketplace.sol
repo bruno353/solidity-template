@@ -20,6 +20,7 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
     Counters.Counter public _itemsSolds;
     Counters.Counter public _NFTsMintedByOwner;
     uint256 public maxSupply = 3333;
+    uint256 public marketplaceFee = 3;  // base 100 - 3 igual a 3%
     bool public isEnabled;
 
     // Ambos possuem 6 casas decimais
@@ -43,9 +44,10 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
     }
     mapping(uint256 => Item) public Items; //id => Item
 
-    constructor (address _USDCAddress, address _USDTAddress) ERC721("Gantier", "GA")  {
+    constructor (address _USDCAddress, address _USDTAddress, uint256 _marketplaceFee) ERC721("Gantier", "GA")  {
         USDCAddress = IERC20(_USDCAddress);
         USDTAddress = IERC20(_USDTAddress);
+        marketplaceFee = _marketplaceFee;
     }
     
     function setTokensAddress(address _USDCAddress, address _USDTAddress) public onlyOwner() {
@@ -90,7 +92,7 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
 
     //MARKETPLACE:
     event itemAddedForSale(uint256 id, uint256 price, address seller);
-    event itemSold(uint256 id, uint256 price, address seller, address buyer);  
+    event itemSold(uint256 id, uint256 price, address seller, address buyer, PaymentType _paymentType);  
 
 
     function putItemForSale(uint256 _tokenId, uint256 _price, PaymentType _paymentType)
@@ -109,13 +111,17 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
     }
 
     // Creates the sale of a marketplace item 
-    function buyItem(uint256 _tokenId) 
+
+    // Funcao parta comprar nfts que estao a venda por matic
+    function buyItemWithMatic(uint256 _tokenId) 
         payable 
         external nonReentrant  {
         require(_tokenIds.current() >= _tokenId, "NFT does not exist");
 		require(ownerOf(_tokenId) == address(this), "Token not for sale");
         require(msg.value >= Items[_tokenId].price, "Not enough funds sent");
         require(msg.sender != Items[_tokenId].seller, "The seller can not buy it");
+        require(Items[_tokenId].paymentType == PaymentType(0), "This item is not for Matic sale");
+    
         uint256 priceEmit = Items[_tokenId].price;
 
         Items[_tokenId].price = 0;
@@ -128,9 +134,45 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
 
         _itemsSolds.increment();
 
-        emit itemSold(_tokenId, priceEmit, Items[_tokenId].seller, msg.sender);
+        emit itemSold(_tokenId, priceEmit, Items[_tokenId].seller, msg.sender, PaymentType(0));
 
         }
+
+    
+    enum USDPaymentType {
+        USDC,
+        USDT
+    }
+
+    // Funcao parta comprar nfts que estao a venda por usd
+    function buyItemWithUSD(uint256 _tokenId, USDPaymentType _USDPaymentType) 
+        external nonReentrant  {
+        require(_tokenIds.current() >= _tokenId, "NFT does not exist");
+		require(ownerOf(_tokenId) == address(this), "Token not for sale");
+        require(msg.sender != Items[_tokenId].seller, "The seller can not buy it");
+        require(Items[_tokenId].paymentType == PaymentType(1), "This item is not for USD sale");
+
+        if (_USDPaymentType == USDPaymentType(0)) {
+            bool sent1 = USDCAddress.transferFrom(msg.sender, address(this), (Items[_tokenId].price * marketplaceFee) / 100);
+            bool sent2 = USDCAddress.transferFrom(msg.sender, Items[_tokenId].seller, (Items[_tokenId].price * (100 - marketplaceFee)) / 100);
+            require(sent1, "Failed to transfer to contract");
+            require(sent2, "Failed to transfer to user");
+        } else {
+            bool sent1 = USDTAddress.transferFrom(msg.sender, address(this), (Items[_tokenId].price * marketplaceFee) / 100);
+            bool sent2 = USDTAddress.transferFrom(msg.sender, Items[_tokenId].seller, (Items[_tokenId].price * (100 - marketplaceFee)) / 100);
+            require(sent1, "Failed to transfer to contract");
+            require(sent2, "Failed to transfer to user");
+        }
+    
+        uint256 priceEmit = Items[_tokenId].price;
+
+        Items[_tokenId].price = 0;
+
+        _itemsSolds.increment();
+
+        emit itemSold(_tokenId, priceEmit, Items[_tokenId].seller, msg.sender, PaymentType(1));
+    
+    }
 
     event unsaledItem(uint256 tokenId, address seller);
 
@@ -148,8 +190,14 @@ abstract contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         emit unsaledItem(_tokenId, msg.sender);
     }
 
-    function withdraw(address payable to, uint256 amount) public onlyOwner {
-        (bool sent,) = to.call{value: amount}("");
+    function withdraw(address payable _to, uint256 _amount) public onlyOwner {
+        (bool sent,) = _to.call{value: _amount}("");
         require(sent, "Failed to send Ether");
+    }
+
+    function withdrawERC20(address _to, uint256 amount, address _contractAddress) public onlyOwner {
+        IERC20 contractAddress = IERC20(_contractAddress);
+        bool sent = contractAddress.transferFrom(address(this), _to, amount);
+        require(sent, "Failed to send ERC20");
     }
 }
