@@ -16,18 +16,22 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
 
+    // Utilização de contadores para rastrear IDs de tokens e itens vendidos
     Counters.Counter public _tokenIds;
     Counters.Counter public _itemsSolds;
     Counters.Counter public _NFTsMintedByOwner;
     uint256 public maxSupply = 3333;
     uint256 public marketplaceFee = 3;  // base 100 - 3 igual a 3%
+
+    // Flag para habilitar ou desabilitar funcionalidades do contrato. - controlado pelo owner
     bool public isEnabled = true;
 
+    // Endereços para tokens ERC20 (USDC e USDT) - serao utilizados como coin de transacao
     // Ambos possuem 6 casas decimais
     IERC20 public USDCAddress;
     IERC20 public USDTAddress;
 
-    //Se o usuário deseja receber em MATIC ou em USD
+    //Se o usuário deseja receber em MATIC ou em USD a sua venda no marketplace
     enum PaymentType {
         Matic,
         USD
@@ -36,6 +40,7 @@ contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
     mapping(uint256 => mapping(address => uint256)) public nftsMintedPerWallet;
     mapping(uint256 => string) public NFTCharacterToURI;
 
+    // Estrutura para representar um item no marketplace - cada nft possui seu Item.
     struct Item {
         uint256 id;
         uint256 price;
@@ -50,13 +55,14 @@ contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         marketplaceFee = _marketplaceFee;
     }
     
-    function setTokensAddress(address _USDCAddress, address _USDTAddress) public onlyOwner() {
+    function setTokensAddress(address _USDCAddress, address _USDTAddress) public onlyOwner {
         USDCAddress = IERC20(_USDCAddress);
         USDTAddress = IERC20(_USDTAddress);
     }
 
     event NFTMinted (uint256 id, string uri, address minter);
 
+    //Funcao de controle do owner que minta nfts para users
     function mintNFT(string[] memory _uris, address _to) public onlyOwner {
         require(isEnabled, "The contract is not enabled");
     
@@ -76,14 +82,11 @@ contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         }
     }
 
-    function setTokenURI(string memory _tokenURI, uint256 _tokenId) public onlyOwner {
-        _setTokenURI(_tokenId, _tokenURI);
-    }
-
     function setContractEnabled(bool _bool) public onlyOwner {
         isEnabled = _bool;
     }
 
+    //Possibilidade de mudar uri (metadado) do nft, utilizado para nfts que upam
     function setURIs( uint256[] memory _nftsArray, string[] memory _nftsURIs) public onlyOwner {
         for (uint i = 0; i < _nftsArray.length; i++) { 
             _setTokenURI(_nftsArray[i], _nftsURIs[i]);
@@ -97,6 +100,7 @@ contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         _transfer(_from, _to, _tokenId);
     }
 
+    // funcao para owner poder administrar burn de nfts
     function burnNFTOwner(uint256 _tokenId)
         public 
         onlyOwner {
@@ -108,7 +112,7 @@ contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
     event itemAddedForSale(uint256 id, uint256 price, address seller);
     event itemSold(uint256 id, uint256 price, address seller, address buyer, PaymentType _paymentType);  
 
-
+    //Realiza a listagem do nft para a venda, user nao possui mais propriedade sobre o nft enquanto estiver em listagem
     function putItemForSale(uint256 _tokenId, uint256 _price, PaymentType _paymentType)
         public 
         {
@@ -173,7 +177,7 @@ contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         USDT
     }
 
-    // Funcao parta comprar nfts que estao a venda por usd
+    // Funcao para comprar nfts que estao a venda por usd
     function buyItemWithUSD(uint256 _tokenId, USDPaymentType _USDPaymentType) 
         external nonReentrant  {
         require(_tokenIds.current() >= _tokenId, "NFT does not exist");
@@ -208,6 +212,7 @@ contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
 
     event unsaledItem(uint256 tokenId, address seller);
 
+    //Realiza a "deslistagem" de um item nft
     function unsaleItem(uint256 _tokenId) 
         payable 
         external {
