@@ -80,6 +80,7 @@ contract OnceMarketplace is OnceToken {
     payable
     returns (uint256){
       require(!activeItems[tokenId], "Item is already up for sale");
+      require(msg.value == listingPrice, "Price must be equal to listing price");
       require(Items[tokenId].backed == true, "This NFT was not backed yet");
 
       uint256 newItemId = itemsForSale.length;
@@ -108,6 +109,7 @@ contract OnceMarketplace is OnceToken {
     payable 
     external {
       require(msg.value >= itemsForSale[id].price, "Not enough funds sent");
+      require(msg.sender != itemsForSale[id].seller);
 
       itemsForSale[id].isSold = true;
       activeItems[itemsForSale[id].tokenId] = false;
