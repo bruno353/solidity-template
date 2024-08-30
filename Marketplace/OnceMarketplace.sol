@@ -74,7 +74,6 @@ contract OnceMarketplace is OnceToken {
   }
 
   function putItemForSale(uint256 tokenId, uint256 price) 
-    OnlyItemOwner(tokenId) 
     HasTransferApproval(tokenId) 
     external 
     payable
@@ -109,7 +108,6 @@ contract OnceMarketplace is OnceToken {
     payable 
     external {
       require(msg.value >= itemsForSale[id].price, "Not enough funds sent");
-      require(msg.sender != itemsForSale[id].seller);
 
       itemsForSale[id].isSold = true;
       activeItems[itemsForSale[id].tokenId] = false;
