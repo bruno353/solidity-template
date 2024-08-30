@@ -74,8 +74,6 @@ contract OnceMarketplace is OnceToken {
   }
 
   function putItemForSale(uint256 tokenId, uint256 price) 
-    OnlyItemOwner(tokenId) 
-    HasTransferApproval(tokenId) 
     external 
     payable
     returns (uint256){
