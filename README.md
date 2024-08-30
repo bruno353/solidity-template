@@ -2,4 +2,4 @@
 blockchain projects based on solidity
 ta
 hellloo
-This is a protocol based on hey wow now!
+This is a protocol based on solidity now!
