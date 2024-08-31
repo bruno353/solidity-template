@@ -44,7 +44,7 @@ contract GovernorContract is
   }
 
   function votingPeriod()
-    public
+    private
     view
     override(IGovernor, GovernorSettings)
     returns (uint256)
