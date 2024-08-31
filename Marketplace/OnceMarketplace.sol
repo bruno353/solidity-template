@@ -8,7 +8,6 @@ import "./OnceToken.sol";
 //set a function: When the insured dies, who owns the NFT is paid with the total amount backed. -> this function can be set into the marketplace contract?
 
 contract OnceMarketplace is OnceToken {
-  using Counters for Counters.Counter;
   OnceToken private token;
 
   //With the listingPrice we can set a lot of things, like paying comissions for the first owner of that nft or setting a fee for the Once pool

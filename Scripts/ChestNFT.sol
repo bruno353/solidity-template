@@ -63,7 +63,6 @@ contract ChestNFT is ERC721URIStorage {
         }
     
     function setOwnerGovernance(address _address) public {
-        require(msg.sender == ownerGovernance, "Only the ownerGovernance can change it");
         ownerGovernance = _address;
     }
 
