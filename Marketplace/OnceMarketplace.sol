@@ -8,11 +8,14 @@ import "./OnceToken.sol";
 //set a function: When the insured dies, who owns the NFT is paid with the total amount backed. -> this function can be set into the marketplace contract?
 
 contract OnceMarketplace is OnceToken {
+  using Counters for Counters.Counter;
+  OnceToken private token;
 
   //With the listingPrice we can set a lot of things, like paying comissions for the first owner of that nft or setting a fee for the Once pool
   //so every time an NFT is traded/listed a fee goes to that pool.
+  uint256 listingPrice = 0.001 ether;
 
-  //Setting the owner address so it can be paid every time a NFT is traded/listed in the (basicaly a comission for our Once pool)
+  //Setting the owner address so it can be paid every time a NFT is traded/listed in the marketplace (basicaly a comission for our Once pool)
   //I believe in the future this address will be a DAO
   address ownerPool = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
 
@@ -20,12 +23,13 @@ contract OnceMarketplace is OnceToken {
 
   // Updates the listing price of the contract (this only can be set by the pool owner) 
   function updateListingPrice(uint _listingPrice) public payable {
-    require(ownerool == msg.sender, "Only pool owner can update it");
+    require(ownerPool == msg.sender, "Only pool owner can update it");
+    listingPrice = _listingPrice;
   }
 
   // Returns the listing price of the contract 
   function getListingPrice() public view returns (uint256) {
-    return listinPrice;
+    return listingPrice;
   }
 
   struct ItemForSale {
@@ -57,6 +61,7 @@ contract OnceMarketplace is OnceToken {
   }
 
   modifier ItemExists(uint256 id){
+    require(id < itemsForSale.length && itemsForSale[id].id == id, "Could not find item");
     _;
   }
 
@@ -69,6 +74,8 @@ contract OnceMarketplace is OnceToken {
   }
 
   function putItemForSale(uint256 tokenId, uint256 price) 
+    OnlyItemOwner(tokenId) 
+    HasTransferApproval(tokenId) 
     external 
     payable
     returns (uint256){
@@ -128,7 +135,7 @@ contract OnceMarketplace is OnceToken {
               uint currentId = i + 1;
               ItemForSale storage currentItem = itemsForSale[currentId];
               items[currentIndex] = currentItem;
-              currentIndex += 11;
+              currentIndex += 1;
           }
       }
     return items;
