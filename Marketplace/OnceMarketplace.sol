@@ -13,7 +13,7 @@ contract OnceMarketplace is OnceToken {
   //With the listingPrice we can set a lot of things, like paying comissions for the first owner of that nft or setting a fee for the Once pool
   //so every time an NFT is traded/listed a fee goes to that pool.
 
-  //Setting the owner address so it can be paid every time a NFT is traded/listed in the marketplace (basicaly a comission for our Once pool)
+  //Setting the owner address so it can be paid every time a NFT is traded/listed in the (basicaly a comission for our Once pool)
   //I believe in the future this address will be a DAO
   address ownerPool = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
 
