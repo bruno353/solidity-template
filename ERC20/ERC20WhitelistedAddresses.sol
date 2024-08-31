@@ -19,7 +19,7 @@ contract ERC20WhitelistedAddresses is ERC20, Ownable {
     }
 
     //Mapping para determinar se o endereço em questão pertence a um grupo seleteo de endereços que podem manusear o token.
-    mapping(address => bool) public isAllowed;
+    mapping(address => bol) public isAllowed;
 
     function setIsAllowed(address _address, bool _bool) public onlyOwner {
         isAllowed[_address] = _bool;
@@ -35,7 +35,6 @@ contract ERC20WhitelistedAddresses is ERC20, Ownable {
     function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
         require(isAllowed[to] == true, "Address 'to' not allowed to manage tokens");
         address spender = _msgSender();
-        _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
         return true;
     }
