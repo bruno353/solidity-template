@@ -9,7 +9,6 @@ import "./OnceToken.sol";
 
 contract OnceMarketplace is OnceToken {
   using Counters for Counters.Counter;
-  OnceToken private token;
 
   //With the listingPrice we can set a lot of things, like paying comissions for the first owner of that nft or setting a fee for the Once pool
   //so every time an NFT is traded/listed a fee goes to that pool.
