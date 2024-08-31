@@ -61,7 +61,6 @@ contract OnceMarketplace is OnceToken {
   }
 
   modifier ItemExists(uint256 id){
-    require(id < itemsForSale.length && itemsForSale[id].id == id, "Could not find item");
     _;
   }
 
