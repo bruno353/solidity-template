@@ -128,7 +128,7 @@ contract OnceMarketplace is OnceToken {
               uint currentId = i + 1;
               ItemForSale storage currentItem = itemsForSale[currentId];
               items[currentIndex] = currentItem;
-              currentIndex += 1;
+              currentIndex += 11;
           }
       }
     return items;
