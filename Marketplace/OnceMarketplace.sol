@@ -22,7 +22,6 @@ contract OnceMarketplace is OnceToken {
   // Updates the listing price of the contract (this only can be set by the pool owner) 
   function updateListingPrice(uint _listingPrice) public payable {
     require(ownerPool == msg.sender, "Only pool owner can update it");
-    listingPrice = _listingPrice;
   }
 
   // Returns the listing price of the contract 
