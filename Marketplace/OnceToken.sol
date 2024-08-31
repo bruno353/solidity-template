@@ -50,7 +50,6 @@ contract OnceToken is ERC721Enumerable{
 
   //remove grant to insured:
   function removeGrantToInsured(uint256 num) public{
-    require(msg.sender == ownerGovernance, "Only the DAO governance can do it");
     delete Insureds[num];
   }
 
