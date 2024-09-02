@@ -117,20 +117,6 @@ contract OnceToken is ERC721Enumerable{
     return newItemId;
   }
 
-  function autoPayoutCheck(uint256 _tokenId) public {
-      require(msg.sender == ownerGovernance, "Only the ownerGovernance can trigger this function");
-  
-      // Assuming `expiryTime` is stored in the `Item` struct as a timestamp
-      if (block.timestamp > Items[_tokenId].expiryTime) {
-          if (Items[_tokenId].assuranceTriggered == false) {
-              address payable insurer = payable(Items[_tokenId].insurer);
-              uint256 payout = Items[_tokenId].payout - poolFee;
-              Items[_tokenId].assuranceTriggered = true;
-              (bool sent, ) = insurer.call{value: payout}("");
-              require(sent, "Failed to return payout to insurer");
-          }
-      }
-  }
   //now the Insurance company (or a single person) can do the payout payment (so the contract can allocate it into a liquidity pool for example) and "buy" the assurance:
   function buyInsurance(uint256 tokenId) public payable {
     require(msg.value == Items[tokenId].payout, "Value for backing the insurance incorrect");
