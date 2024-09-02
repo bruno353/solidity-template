@@ -154,21 +154,6 @@ contract OnceToken is ERC721Enumerable{
       poolFee = _poolFee;
   }
 
-  function autoPayoutCheck(uint256 _tokenId) public {
-      require(msg.sender == ownerGovernance, "Only the ownerGovernance can trigger this function");
-  
-      // Assuming `expiryTime` is stored in the `Item` struct as a timestamp
-      if (block.timestamp > Items[_tokenId].expiryTime) {
-          if (Items[_tokenId].assuranceTriggered == false) {
-              address payable insurer = payable(Items[_tokenId].insurer);
-              uint256 payout = Items[_tokenId].payout - poolFee;
-              Items[_tokenId].assuranceTriggered = true;
-              (bool sent, ) = insurer.call{value: payout}("");
-              require(sent, "Failed to return payout to insurer");
-          }
-      }
-  }
-
   //getPayout is triggered when the insured dies - who owns the nft will get the payout:
   function getPayout(uint256 _tokenId) public {
     require(msg.sender == ownerGovernance, "Only the ownerGovernance can withdraw!!");
