@@ -237,4 +237,74 @@ contract Gantier is ERC721URIStorage, Ownable, ReentrancyGuard {
         bool sent = contractAddress.transfer(_to, amount);
         require(sent, "Failed to send ERC20");
     }
+
+ // New structure for purchase orders
+    struct PurchaseOrder {
+        address buyer;
+        uint256 amount;
+        bool isUSDC;
+        bool processed;
+    }
+
+    // New mapping to store purchase orders
+    mapping(uint256 => PurchaseOrder) public purchaseOrders;
+    Counters.Counter private _purchaseOrderIds;
+
+    // New event for purchase order creation
+    event PurchaseOrderCreated(uint256 orderId, address buyer, uint256 amount, bool isUSDC);
+
+    // New event for purchase order processing
+    event PurchaseOrderProcessed(uint256 orderId, uint256 tokenId);
+
+    // Existing constructor and functions...
+
+    // New function to create a purchase order
+    function createPurchaseOrder(uint256 _amount, bool _isUSDC) external nonReentrant {
+        require(_amount > 0, "Amount must be greater than 0");
+
+        IERC20 token = _isUSDC ? USDCAddress : USDTAddress;
+        require(token.transferFrom(msg.sender, address(this), _amount), "Token transfer failed");
+
+        _purchaseOrderIds.increment();
+        uint256 newOrderId = _purchaseOrderIds.current();
+
+        purchaseOrders[newOrderId] = PurchaseOrder({
+            buyer: msg.sender,
+            amount: _amount,
+            isUSDC: _isUSDC,
+            processed: false
+        });
+
+        emit PurchaseOrderCreated(newOrderId, msg.sender, _amount, _isUSDC);
+    }
+
+    // New function for the owner to process a purchase order and mint an NFT
+    function processPurchaseOrder(uint256 _orderId, string memory _tokenURI) external onlyOwner {
+        require(_orderId <= _purchaseOrderIds.current(), "Invalid order ID");
+        PurchaseOrder storage order = purchaseOrders[_orderId];
+        require(!order.processed, "Order already processed");
+
+        _tokenIds.increment();
+        uint256 newTokenId = _tokenIds.current();
+
+        _safeMint(order.buyer, newTokenId);
+        _setTokenURI(newTokenId, _tokenURI);
+
+        order.processed = true;
+
+        emit PurchaseOrderProcessed(_orderId, newTokenId);
+    }
+
+    // New function to refund a purchase order (in case it's rejected)
+    function refundPurchaseOrder(uint256 _orderId) external onlyOwner {
+        require(_orderId <= _purchaseOrderIds.current(), "Invalid order ID");
+        PurchaseOrder storage order = purchaseOrders[_orderId];
+        require(!order.processed, "Order already processed");
+
+        IERC20 token = order.isUSDC ? USDCAddress : USDTAddress;
+        require(token.transfer(order.buyer, order.amount), "Refund failed");
+
+        order.processed = true;
+    }
+
 }
