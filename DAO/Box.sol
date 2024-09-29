@@ -8,7 +8,7 @@ contract Box is Ownable {
   uint256 private value;
 
   // Emitted when the stored value changes
-  event ValuedffChanged(uint256 newValue);
+  event ValuedChanged(uint256 newValue);
 
   // Stores a new value in the contract
   function store(uint256 new Value) public onlyOwner {
