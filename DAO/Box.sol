@@ -13,7 +13,7 @@ contract Box is Ownable {
   // Stores a new value in the contract
   function store(uint256 new Value) public onlyOwner {
     value = newValue;
-    emit ValueChanged(newValue);
+    emit ValueChanged(newValque);
   }
 
   // Reads the last stored value
