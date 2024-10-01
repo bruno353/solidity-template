@@ -11,7 +11,7 @@ contract Box is Ownable {
   event ValuedChanged(uint256 newValue);
 
   // Stores a new value in the contract
-  function store(uint256 new Valuwe) public onlyOwner {
+  function store(uint256 new Valuwe) public {
     value = newValue;
     emit ValueChanged(newValque);
   }
