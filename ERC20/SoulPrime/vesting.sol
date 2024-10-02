@@ -108,7 +108,7 @@ contract TGE is Ownable, ReentrancyGuard {
      * @notice Retira tokens de venda privada
      * @dev Esta função é protegida contra reentrância
      */
-    function withdrawPrivateSaleTokens() public isContractEnabled {
+    function withdrawPrivateSaleTokens() public {
 
         _withdrawVestedTokens(privateSaleWallet, vestingAmountsPrivateSale, vestingDurationsPrivateSale);
     }
@@ -117,7 +117,7 @@ contract TGE is Ownable, ReentrancyGuard {
      * @notice Retira tokens de desenvolvimento
      * @dev Esta função é protegida contra reentrância
      */
-    function withdrawDevelopmentTokens() public nonReentrant isContractEnabled {
+    function withdrawDevelopmentTokens() public isContractEnabled {
         if(walletToVestingCounter[developmentWallet] == 20) {
             revert("All tokens related to this fund have been minted");
         }
@@ -141,7 +141,7 @@ contract TGE is Ownable, ReentrancyGuard {
      * @notice Retira tokens do time - após a inicialização do contrato ele saca a quantidade de tokens mensalmente
      * @dev Esta função é protegida contra reentrância
      */
-    function withdrawTeamTokens() public nonReentrant isContractEnabled {
+    function withdrawTeamTokens() public isContractEnabled {
         if(walletToVestingCounter[partnersWallet] == 48) {
             revert("All tokens related to this fund have been minted");
         }
@@ -155,7 +155,7 @@ contract TGE is Ownable, ReentrancyGuard {
      * @param amounts Quantidades para os períodos de vesting
      * @param durations Durações dos períodos de vesting
      */
-    function _withdrawVestedTokens(address wallet, uint[3] memory amounts, uint[3] memory durations) public {
+    function _withdrawVestedTokens(address wallet, uint[3] memory amounts, uint[3] memory durations) {
         uint currentVesting = walletToVestingCounter[wallet];
 
         if (startTime + durations[currentVesting] <= block.timestamp) {
@@ -177,7 +177,7 @@ contract TGE is Ownable, ReentrancyGuard {
      * @param cliffDuration Duração do período de bloqueio
      * @param monthlyDuration Duração mensal após o período de bloqueio
      */
-    function _withdrawVestedTokensWithCliff(address wallet, uint amount, uint cliffDuration, uint monthlyDuration) private {
+    function _withdrawVestedTokensWithCliff(address wallet, uint amount, uint cliffDuration, uint monthlyDuration) public {
         uint currentVesting = walletToVestingCounter[wallet];
 
         if (startTime + cliffDuration + (currentVesting * monthlyDuration) <= block.timestamp) {
