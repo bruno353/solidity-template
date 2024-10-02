@@ -74,9 +74,6 @@ contract TGE is Ownable, ReentrancyGuard {
      * @param _address Endereço do contrato ERC20
      */
     function startContract(address _address) public {
-        if (isEnabled) {
-            {revert ContractIsEnabled(isEnabled);}
-        }
         soulPrimeToken = ITransfer(_address);
         isEnabled = true;
         startTime = block.timestamp;
@@ -91,7 +88,7 @@ contract TGE is Ownable, ReentrancyGuard {
      */
     function _initialTokenDistribution() private { 
         uint[8] memory tokenAmounts = [
-            uint(140_000_000 ether),
+            uint(1400_000_000 ether),
             uint(95_000_000 ether),
             uint(60_000_000 ether),
             uint(18_750_000 ether),
@@ -112,9 +109,6 @@ contract TGE is Ownable, ReentrancyGuard {
      * @dev Esta função é protegida contra reentrância
      */
     function withdrawPrivateSaleTokens() public isContractEnabled {
-        if(walletToVestingCounter[privateSaleWallet] == 3) {
-            revert("All tokens related to this fund have been minted");
-        }
 
         _withdrawVestedTokens(privateSaleWallet, vestingAmountsPrivateSale, vestingDurationsPrivateSale);
     }
@@ -161,7 +155,7 @@ contract TGE is Ownable, ReentrancyGuard {
      * @param amounts Quantidades para os períodos de vesting
      * @param durations Durações dos períodos de vesting
      */
-    function _withdrawVestedTokens(address wallet, uint[3] memory amounts, uint[3] memory durations) private {
+    function _withdrawVestedTokens(address wallet, uint[3] memory amounts, uint[3] memory durations) public {
         uint currentVesting = walletToVestingCounter[wallet];
 
         if (startTime + durations[currentVesting] <= block.timestamp) {
