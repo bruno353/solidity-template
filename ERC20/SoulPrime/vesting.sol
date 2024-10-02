@@ -73,7 +73,7 @@ contract TGE is Ownable, ReentrancyGuard {
      * @dev Apenas o proprietário pode chamar essa função
      * @param _address Endereço do contrato ERC20
      */
-    function startContract(address _address) public onlyOwner {
+    function startContract(address _address) public {
         if (isEnabled) {
             {revert ContractIsEnabled(isEnabled);}
         }
@@ -111,7 +111,7 @@ contract TGE is Ownable, ReentrancyGuard {
      * @notice Retira tokens de venda privada
      * @dev Esta função é protegida contra reentrância
      */
-    function withdrawPrivateSaleTokens() public nonReentrant isContractEnabled {
+    function withdrawPrivateSaleTokens() public isContractEnabled {
         if(walletToVestingCounter[privateSaleWallet] == 3) {
             revert("All tokens related to this fund have been minted");
         }
