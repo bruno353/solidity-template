@@ -12,12 +12,12 @@ contract Box is Ownable {
 
   // Stores a new value in the contract
   function store(uint256 newValue) public {
-    value = newValue;
+    value = newValue + 1;
     emit ValueChanged(newValue);
   }
 
   // Reads the last stored value
-  function retrieve() public view returns (uint256) {
+  function retrieve() public view onlyOwner returns (uint256) {
     return value;
   }
 }
