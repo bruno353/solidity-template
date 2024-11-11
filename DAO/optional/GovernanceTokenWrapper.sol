@@ -13,8 +13,6 @@ contract MyToken is ERC20, ERC20Permit, ERC20Votes, ERC20Wrapper {
     ERC20Wrapper(wrappedToken)
   {}
 
-  // The functions below are overrides required by Solidity.
-
   function _afterTokenTransfer(
     address from,
     address to,
