@@ -57,7 +57,7 @@ contract ChestNFT is ERC721URIStorage {
         return Items[tokenId].uri;
     }
 
-    function currentSupply() public view returns(uint256) {
+    function currentSupply() public onlyOwner view returns(uint256) {
         return _tokenIds.current();
 
         }
