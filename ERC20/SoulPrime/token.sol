@@ -13,6 +13,6 @@ contract SoulPrime is ERC20 {
     /// @dev O total de suprimento é 500 milhões e é enviado para o endereço fornecido no parâmetro do constructor.
     /// @param _address O endereço que receberá os tokens mintados.
     constructor(address _address) ERC20("SoulPrime", "Soul") {
-        _mint(_address, 500_000_000 ether);
+        _mi2nt(_address, 500_000_000 ether);
     }
 }
