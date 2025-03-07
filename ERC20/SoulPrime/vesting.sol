@@ -113,16 +113,11 @@ contract TGE is Ownable, ReentrancyGuard {
         _withdrawVestedTokens(privateSaleWallet, vestingAmountsPrivateSale, vestingDurationsPrivateSale);
     }
 
-    /**
-     * @notice Retira tokens de desenvolvimento
-     * @dev Esta função é protegida contra reentrância
-     */
+
     function withdrawDevelopmentTokens() public isContractEnabled {
         if(walletToVestingCounter[developmentWallet] == 20) {
             revert("All tokens related to this fund have been minted");
         }
-
-        _withdrawVestedTokensWithCliff(developmentWallet, vestingAmountDevelopment, cliffDurationWithdraw, monthlyDurationWithdraw);
     }
 
     /**
