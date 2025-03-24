@@ -38,6 +38,13 @@ contract OnceToken is ERC721Enumerable{
     address insured;
   }
 
+  //Creating the insured structs:
+  struct Insured2 {
+    uint256 id;
+    address insured;
+  }
+
+
   event insuredGranted(uint256 id, address insured);
 
   mapping(uint256 => Insured) public Insureds;
