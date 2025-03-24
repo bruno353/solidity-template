@@ -1,16 +1,59 @@
 {% extends "templates/base_template.html" %}
 
-{% block title %}Mint Your Fancy NFT{% endblock %}
+{% block title %}NFT Minting Portal{% endblock %}
 
 {% block head %}
-<!-- Additional head content (CSS, meta tags, etc.) can go here -->
+<!-- Meta tags for better SEO and device compatibility -->
+<meta name="description" content="Mint your own NFT using Moralis API">
+<meta name="keywords" content="NFT, blockchain, ethereum, moralis, web3">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Additional styles -->
+<style>
+  .form-section {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  
+  .section-title {
+    color: #495057;
+    border-bottom: 2px solid #6c757d;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .nft-preview {
+    max-width: 300px;
+    margin: 0 auto;
+    text-align: center;
+    display: none;
+  }
+  
+  .nft-preview img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  
+  @media (max-width: 767px) {
+    .form-section {
+      padding: 15px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block main %}
-<div class="container my-4">
+<div class="container my-5">
   <div class="row">
-    <div class="col-md-8 offset-md-2">
-      <h1 class="mb-4 text-center">Mint Your Fancy NFT</h1>
+    <div class="col-lg-8 offset-lg-2">
+      <header class="text-center mb-5">
+        <h1 class="display-4">NFT Minting Portal</h1>
+        <p class="lead text-muted">Create and mint your own unique NFT on the blockchain</p>
+      </header>
       
       <!-- User Info Section -->
       <form class="mb-5">
@@ -89,17 +132,200 @@
           </button>
         </div>
       </form>
+
+      <!-- User Authentication Section -->
+      <section id="authentication-section" class="form-section">
+        <h2 class="section-title">User Authentication</h2>
+        <form id="login-form" class="needs-validation" novalidate>
+          <div class="mb-4">
+            <label for="username" class="form-label">Username</label>
+            <input 
+              id="username" 
+              type="text" 
+              class="form-control" 
+              placeholder="Enter your username"
+              aria-label="Username"
+              required
+            >
+            <div class="invalid-feedback">
+              Please enter a username
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label for="useremail" class="form-label">Email</label>
+            <input 
+              id="useremail" 
+              type="email" 
+              class="form-control" 
+              placeholder="Enter your email"
+              aria-label="Email"
+              required
+            >
+            <div class="invalid-feedback">
+              Please enter a valid email address
+            </div>
+          </div>
+          
+          <div class="d-grid gap-2">
+            <button 
+              type="button" 
+              class="btn btn-primary py-2" 
+              id="submit" 
+              onclick="login();"
+            >
+              <i class="bi bi-wallet2"></i> Connect with MetaMask
+            </button>
+          </div>
+          
+          <div class="text-center mt-3">
+            <small class="text-muted">You'll need MetaMask extension installed to continue</small>
+          </div>
+        </form>
+      </section>
       
-      <hr>
-      <div class="mt-3" id="resultSpace"></div>
+      <!-- NFT Creation Section -->
+      <section id="nft-section" class="form-section">
+        <h2 class="section-title">NFT Creation</h2>
+        <form id="nft-form" class="needs-validation" novalidate>
+          <div class="mb-4">
+            <label for="name" class="form-label">NFT Name</label>
+            <input 
+              disabled 
+              id="name" 
+              type="text" 
+              class="form-control" 
+              placeholder="Name of your NFT"
+              aria-label="NFT Name"
+              required
+            >
+            <div class="invalid-feedback">
+              Please provide a name for your NFT
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label for="description" class="form-label">Description</label>
+            <textarea 
+              disabled 
+              id="description" 
+              class="form-control" 
+              placeholder="Short description of your NFT"
+              aria-label="NFT Description"
+              rows="3"
+              required
+            ></textarea>
+            <div class="invalid-feedback">
+              Please provide a description for your NFT
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label for="file" class="form-label">NFT Image</label>
+            <input 
+              type="file" 
+              disabled 
+              id="file" 
+              class="form-control"
+              aria-label="NFT File"
+              accept="image/*"
+              required
+              onchange="previewImage(event)"
+            >
+            <div class="invalid-feedback">
+              Please select an image file
+            </div>
+            <small class="form-text text-muted">
+              Supported formats: JPG, PNG, GIF (max 10MB)
+            </small>
+          </div>
+          
+          <!-- Image preview -->
+          <div id="image-preview" class="nft-preview mb-4">
+            <img id="preview-img" src="#" alt="NFT Preview">
+            <div class="preview-info text-muted">Preview</div>
+          </div>
+          
+          <div class="d-grid gap-2">
+            <button 
+              disabled 
+              type="button" 
+              class="btn btn-success py-2" 
+              id="upload" 
+              onclick="upload();"
+            >
+              <i class="bi bi-cloud-arrow-up"></i> Upload & Mint NFT
+            </button>
+          </div>
+        </form>
+      </section>
+      
+      <!-- Transaction Result Section -->
+      <section id="result-section" class="mt-4">
+        <div id="resultSpace"></div>
+        <div id="transaction-status"></div>
+      </section>
     </div>
   </div>
 </div>
 {% endblock %}
 
 {% block script %}
-<!-- Include any scripts necessary for Web3, Moralis, etc. -->
+<!-- Web3 and Moralis SDK -->
 <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+
+<!-- Bootstrap Icons -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css"></script>
+
+<!-- Application Logic -->
 <script src="{{ url_for('static', filename='js/logic.js') }}"></script>
+
+<!-- Image Preview Functionality -->
+<script>
+  /**
+   * Displays a preview of the selected image
+   * @param {Event} event - The file input change event
+   */
+  function previewImage(event) {
+    const preview = document.getElementById('preview-img');
+    const previewContainer = document.getElementById('image-preview');
+    const file = event.target.files[0];
+    
+    if (file) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+        previewContainer.style.display = 'block';
+      }
+      
+      reader.readAsDataURL(file);
+    } else {
+      previewContainer.style.display = 'none';
+    }
+  }
+  
+  /**
+   * Form validation setup
+   */
+  (function() {
+    'use strict';
+    
+    // Fetch all forms we want to apply validation to
+    const forms = document.querySelectorAll('.needs-validation');
+    
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms).forEach(function(form) {
+      form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+      }, false);
+    });
+  })();
+</script>
 {% endblock %}

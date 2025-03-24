@@ -1,170 +1,160 @@
-import { CreditCardOutlined } from "@ant-design/icons";
-import { Button, Input } from "antd";
-import { ethers } from "ethers";
-import Text from "antd/lib/typography/Text";
-import { useEffect, useState } from "react";
-import { useMoralis } from "react-moralis";
-import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
-import { getExplorer } from "helpers/networks";
-import { useWeb3ExecuteFunction } from "react-moralis";
-import AddressInput from "../../AddressInput";
-import AssetSelector from "./AssetSelector";
-import { PolygonCurrency} from "../../Chains/Logos";
-var bigInt = require("big-integer");
+/**
+ * @fileoverview IPFS integration module for NFT minting
+ * @description Handles file uploads to IPFS and metadata creation for NFTs
+ */
+const axios = require('axios');
+const FormData = require('form-data');
+const fs = require('fs');
+const path = require('path');
+const logger = require('./utils/logger');
 
-const pinataSDK = require('@pinata/sdk');
-const pinata = pinataSDK(`32459721f4b813b4a6a7`, '344be49e109a8d33d12ebd8f7a1a487571dd2c706501c88e28044e69f9c44082');
+// Constants
+const PINATA_API_URL = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
+const PINATA_METADATA_URL = 'https://api.pinata.cloud/pinning/pinJSONToIPFS';
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2000;
 
-const styles = {
-  card: {
-    alignItems: "center",
-    width: "100%",
-  },
-  header: {
-    textAlign: "center",
-  },
-  input: {
-    width: "100%",
-    outline: "none",
-    fontSize: "16px",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textverflow: "ellipsis",
-    appearance: "textfield",
-    color: "#041836",
-    fontWeight: "700",
-    border: "none",
-    backgroundColor: "transparent",
-  },
-  select: {
-    marginTop: "20px",
-    display: "flex",
-    alignItems: "center",
-  },
-  textWrapper: { maxWidth: "80px", width: "100%" },
-  row: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    flexDirection: "row",
-  },
-};
-
-function Transfer() {
-  const { Moralis } = useMoralis();
-  const [receiver, setReceiver] = useState();
-  const [asset, setAsset] = useState();
-  const [tx, setTx] = useState();
-  const [amount, setAmount] = useState();
-  const [premium, setPremium] = useState();
-  const [isPending, setIsPending] = useState(false);
-  const { chainId, marketAddress, contractABI } = useMoralisDapp();
-  const contractProcessor = useWeb3ExecuteFunction(); 
-  const contractABIJson = JSON.parse(contractABI);
-  const buyInsuranceFunction = "buyInsurance";
-  const payoutFunction = "fetchPayoutAmount";
-  const uriParam = "putTextHere";
-  const provider = new ethers.providers.JsonRpcProvider("");
-  const signer = new ethers.Wallet("", provider);
-
-  useEffect(() => {
-    amount? setTx({ amount }) : setTx();
-  }, [amount]);
-
+/**
+ * Uploads a file to IPFS using Pinata service
+ * @param {string} filePath - Path to the file to upload
+ * @param {Object} options - Upload options
+ * @param {string} options.pinataApiKey - Pinata API key
+ * @param {string} options.pinataSecretApiKey - Pinata secret API key
+ * @returns {Promise<string>} - CID of the uploaded file
+ */
+async function uploadFileToIPFS(filePath, options) {
+  logger.debug("[uploadFileToIPFS] Starting file upload to IPFS");
   
-  async function fetchPayout() {
-    const returnContract = new ethers.Contract(marketAddress, contractABI, signer);
-    const data = await returnContract.fetchPayoutAmount(amount)
-    return data
-  }
-
-  async function transfer() {
-
-  const body = {
-      description: 'Bruno Santos; 27/02/1999; Uruguay'
-  };
-  const options = {
-      pinataMetadata: {
-          name: 'MyCustomName',
-          keyvalues: {
-              customKey: 'customValue',
-              customKey2: 'customValue2'
-          }
-      },
-      pinataOptions: {
-          cidVersion: 0
+  try {
+    const { pinataApiKey, pinataSecretApiKey } = options;
+    
+    if (!pinataApiKey || !pinataSecretApiKey) {
+      throw new Error('Missing Pinata API credentials');
+    }
+    
+    const formData = new FormData();
+    const fileStream = fs.createReadStream(filePath);
+    const fileName = path.basename(filePath);
+    
+    formData.append('file', fileStream, { filename: fileName });
+    
+    const response = await axios.post(PINATA_API_URL, formData, {
+      maxBodyLength: Infinity,
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
+        pinata_api_key: pinataApiKey,
+        pinata_secret_api_key: pinataSecretApiKey
       }
-  };
-  pinata.pinJSONToIPFS(body, options).then((result) => {
-      //handle results here
-      console.log(result.IpfsHash);
-  }).catch((err) => {
-      //handle error here
-      console.log(err);
-  });
-
-    let finald = 1;
-    await fetchPayout().then(data =>{
-       
-       finald = Number(data);
-       return Number(data)
-  });
-
-  console.log(finald);
-  const ops = {
-    contractAddress: marketAddress,
-    functionName: buyInsuranceFunction,
-    abi: contractABIJson,
-    msgValue: finald,
-    params: {
-      tokenId: amount
-    },
-  };
-
-  await contractProcessor.fetch({
-    params: ops,
-    onSuccess: () => {
-      console.log("success");
-      setIsPending(false);       
-    },
-    onError: (error) => {
-      setIsPending(false);
-      alert(error);
-    },
-  });
+    });
+    
+    if (response.status !== 200) {
+      throw new Error(`Upload failed with status: ${response.status}`);
+    }
+    
+    logger.debug(`[uploadFileToIPFS] File uploaded successfully with CID: ${response.data.IpfsHash}`);
+    return response.data.IpfsHash;
+  } catch (error) {
+    logger.error(`[uploadFileToIPFS] Error uploading file: ${error.message}`);
+    throw error;
   }
-  
-
-  return (
-    <div style={styles.card}>
-      <div style={styles.tranfer}>
-        <div style={styles.header}>
-          <h3>Set the Once NFT token id from which you want to get details</h3>
-        </div>
-        <div style={styles.select}>
-          <Input
-            size="large"
-            prefix="#️⃣"
-            onChange={(e) => {
-              setAmount(`${e.target.value}`);
-            }}
-          />
-        </div>
-        <Button
-        type="primary"
-        size="large"
-        style={{ width: "40%", marginTop: "25px", marginLeft: "31%" }}
-        href={`https://api.covalenthq.com/v1/80001/tokens/0x447dAEFfeD05280f724A7857Fa0568b0AAb27B99/nft_metadata/${amount}/?key=ckey_9424e31e6b6a47fe82f0cae48d7`}
-        target="_blank"
-        rel="noopener noreferrer"
-        disabled={!tx}
-      >
-          Search it 🕵️
-        </Button>
-      </div>
-      
-    </div>
-  );
 }
 
-export default Transfer;
+/**
+ * Creates and uploads NFT metadata to IPFS
+ * @param {Object} metadata - NFT metadata
+ * @param {string} metadata.name - Name of the NFT
+ * @param {string} metadata.description - Description of the NFT
+ * @param {string} metadata.imageCid - CID of the NFT image on IPFS
+ * @param {Object} options - Upload options
+ * @param {string} options.pinataApiKey - Pinata API key
+ * @param {string} options.pinataSecretApiKey - Pinata secret API key
+ * @returns {Promise<string>} - CID of the uploaded metadata
+ */
+async function uploadMetadataToIPFS(metadata, options) {
+  logger.debug("[uploadMetadataToIPFS] Creating and uploading NFT metadata");
+  
+  try {
+    const { pinataApiKey, pinataSecretApiKey } = options;
+    
+    if (!pinataApiKey || !pinataSecretApiKey) {
+      throw new Error('Missing Pinata API credentials');
+    }
+    
+    const { name, description, imageCid, attributes = [] } = metadata;
+    
+    const metadataObject = {
+      name,
+      description,
+      image: `ipfs://${imageCid}`,
+      attributes
+    };
+    
+    const response = await axios.post(PINATA_METADATA_URL, metadataObject, {
+      headers: {
+        pinata_api_key: pinataApiKey,
+        pinata_secret_api_key: pinataSecretApiKey
+      }
+    });
+    
+    if (response.status !== 200) {
+      throw new Error(`Metadata upload failed with status: ${response.status}`);
+    }
+    
+    logger.debug(`[uploadMetadataToIPFS] Metadata uploaded successfully with CID: ${response.data.IpfsHash}`);
+    return response.data.IpfsHash;
+  } catch (error) {
+    logger.error(`[uploadMetadataToIPFS] Error uploading metadata: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Uploads an asset with retry mechanism
+ * @param {Function} uploadFunction - The upload function to retry
+ * @param {Array} args - Arguments for the upload function
+ * @returns {Promise<string>} - CID of the uploaded asset
+ */
+async function uploadWithRetry(uploadFunction, ...args) {
+  logger.debug("[uploadWithRetry] Attempting upload with retry mechanism");
+  
+  let lastError;
+  
+  for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
+    try {
+      return await uploadFunction(...args);
+    } catch (error) {
+      lastError = error;
+      logger.warning(`[uploadWithRetry] Attempt ${attempt} failed: ${error.message}`);
+      
+      if (attempt < MAX_RETRY_ATTEMPTS) {
+        logger.debug(`[uploadWithRetry] Retrying in ${RETRY_DELAY_MS / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+      }
+    }
+  }
+  
+  logger.error(`[uploadWithRetry] All ${MAX_RETRY_ATTEMPTS} attempts failed`);
+  throw lastError;
+}
+
+/**
+ * Validates IPFS CID format
+ * @param {string} cid - IPFS CID to validate
+ * @returns {boolean} - Whether the CID is valid
+ */
+function isValidCid(cid) {
+  if (!cid || typeof cid !== 'string') {
+    return false;
+  }
+  
+  // Basic CID v0 or v1 format check
+  const cidPattern = /^(Qm[1-9A-Za-z]{44}|b[a-zA-Z0-9]{58})$/;
+  return cidPattern.test(cid);
+}
+
+module.exports = {
+  uploadFileToIPFS,
+  uploadMetadataToIPFS,
+  uploadWithRetry,
+  isValidCid
+};
