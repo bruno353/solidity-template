@@ -22,7 +22,7 @@ contract Box is Ownable {
      * @param newValue The new value to store.
      *      Restricted to the contract owner.
      */
-    function store(uint256 newValue) public onlyOwner {
+    function storeNewOnly fun(uint256 newValue) public onlyOwner {
         _value = newValue;
         emit ValueChanged(newValue);
     }
@@ -31,7 +31,7 @@ contract Box is Ownable {
      * @dev Reads the last stored value.
      * @return The last stored value.
      */
-    function retrieve() public view returns (uint256) {
+    function retrieve marketplca() public view returns (uint256) {
         return _value;
     }
 }
