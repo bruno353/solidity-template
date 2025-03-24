@@ -1,84 +1,145 @@
 // SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.0;
 
-pragma solidity >=0.7.0 <0.9.0;
-
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-
-contract ChestNFT is ERC721URIStorage {
+/**
+ * @title ChestNFT
+ * @notice An ERC721 NFT contract with metadata storage, enumerability, and supply management.
+ */
+contract ChestNFT is ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
-    Counters.Counter public _tokenIds;
-    address public ownerGovernance;
-    uint256 maxSupply;
+    /// @dev Tracks the current token ID.
+    Counters.Counter private _tokenIds;
 
+    /// @notice Maximum supply (hard cap) of NFTs mintable.
+    uint256 public maxSupply;
 
-    constructor (uint256 _maxSupply) ERC721("Chest-NFT", "TBT") {
-            ownerGovernance = msg.sender;
-            maxSupply = _maxSupply;
-    }
-
-    //Creating the nfts struct:
+    /// @notice Structure to hold token-specific metadata.
     struct Item {
         uint256 id;
         uint256 category;
-        string uri;//metadata url
+        string uri; // The metadata URI
     }
 
-    event NFTMinted (uint256 id, uint256 category, string uri);
+    /// @notice Map token ID to its Item metadata.
+    mapping(uint256 => Item) private _items;
 
-    mapping(uint256 => Item) public Items; //id => Item
+    /// @notice Emitted when a new ChestNFT is minted.
+    event NFTMinted(uint256 indexed tokenId, uint256 category, string uri);
 
-    function mint(string memory uri, uint256 _category, address _address) public payable returns(uint256){
-        require(_tokenIds.current() < maxSupply, "The minting process reached the max supply");
-        _tokenIds.increment();
-        uint256 newItemId = _tokenIds.current();
-        _safeMint(_address, newItemId);
-        approve(address(this), newItemId);
-        _setTokenURI(newItemId, uri);
-        
-        Items[newItemId] = Item({
-        id: newItemId, 
-        category: _category,
-        uri: uri
-        });
-
-        emit NFTMinted(Items[newItemId].id, Items[newItemId].category, Items[newItemId].uri);
-        return newItemId;
-    }
-
-
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), "ERC721URIStorage: URI query for nonexistent token");
-        return Items[tokenId].uri;
-    }
-
-    function currentSupply() public onlyOwner view returns(uint256) {
-        return _tokenIds.current();
-
-        }
-    
-    function setOwnerGovernance(address _address) public {
-        ownerGovernance = _address;
-    }
-
-    function setMaxSupply(uint256 _maxSupply) public {
-        require(msg.sender == ownerGovernance, "Only the ownerGovernance can change it");
+    /**
+     * @dev Sets contract name, symbol, and maximum supply in constructor.
+     * @param _name The ERC721 name.
+     * @param _symbol The ERC721 symbol.
+     * @param _maxSupply The hard cap for mintable NFTs.
+     */
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint256 _maxSupply
+    ) ERC721(_name, _symbol) {
         maxSupply = _maxSupply;
     }
 
-    function setTokenURI(string memory _tokenURI, uint256 _tokenId) public {
-        _setTokenURI(_tokenId, _tokenURI);
-        Items[_tokenId].uri = _tokenURI;
+    /**
+     * @notice Mint a new NFT with a given URI and category, and assign it to `_to`.
+     * @param _to The recipient address of the minted NFT.
+     * @param _uri The URI of the NFT metadata.
+     * @param _category Numeric category identifier for the NFT.
+     * @return newItemId The newly minted token ID.
+     */
+    function mint(
+        address _to,
+        string memory _uri,
+        uint256 _category
+    ) external onlyOwner returns (uint256) {
+        require(
+            _tokenIds.current() < maxSupply,
+            "ChestNFT: Minting would exceed max supply"
+        );
+
+        _tokenIds.increment();
+        uint256 newItemId = _tokenIds.current();
+
+        // Mint the token safely
+        _safeMint(_to, newItemId);
+
+        // Set metadata URI
+        _setTokenURI(newItemId, _uri);
+
+        // Store Item metadata in the contract
+        _items[newItemId] = Item({
+            id: newItemId,
+            category: _category,
+            uri: _uri
+        });
+
+        emit NFTMinted(newItemId, _category, _uri);
+        return newItemId;
     }
 
-    function getItemById(uint256 _tokenId) public view returns(Item memory){
-        return Items[_tokenId];
+    /**
+     * @notice Returns the total number of NFTs minted so far.
+     */
+    function currentSupply() external view returns (uint256) {
+        return _tokenIds.current();
     }
 
+    /**
+     * @notice Allows the owner to update the maximum supply (if necessary).
+     *         Make sure you trust the contract owner fully if you allow changes.
+     * @param _newMaxSupply The new max supply to enforce.
+     */
+    function setMaxSupply(uint256 _newMaxSupply) external onlyOwner {
+        require(
+            _newMaxSupply >= _tokenIds.current(),
+            "ChestNFT: New max supply is below current minted tokens"
+        );
+        maxSupply = _newMaxSupply;
+    }
 
-}
+    /**
+     * @notice Updates the token URI post-mint.
+     * @param _tokenId The NFT to update.
+     * @param _newTokenURI The new metadata URI.
+     */
+    function setTokenURI(uint256 _tokenId, string memory _newTokenURI)
+        external
+        onlyOwner
+    {
+        require(_exists(_tokenId), "ChestNFT: URI set of nonexistent token");
+        _setTokenURI(_tokenId, _newTokenURI);
+        _items[_tokenId].uri = _newTokenURI;
+    }
+
+    /**
+     * @notice Retrieves the entire Item struct for the token ID.
+     * @dev Reverts if the token does not exist.
+     */
+    function getItemById(uint256 _tokenId)
+        external
+        view
+        returns (Item memory)
+    {
+        require(_exists(_tokenId), "ChestNFT: Query for nonexistent token");
+        return _items[_tokenId];
+    }
+
+    /**
+     * @notice Utility function to get an array of all token IDs owned by a specific address.
+     * @param _owner The address to query.
+     * @return An array of token IDs owned by `_owner`.
+     *
+     * @dev This is made easier by ERC721Enumerable, which allows `tokenOfOwnerByIndex`.
+     *      Be mindful of gas usage if the owner has many tokens.
+     */
+    function tokensOfOwner(address _owner)
+        external
+        view
+        returns (uint256[] memory)
+    {
