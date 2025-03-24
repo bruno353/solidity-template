@@ -4,23 +4,27 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
 /**
- * @title governancetoken
- * @notice erc20 token with governance capabilities using erc20votes
+ * @title GovernanceToken
+ * @dev Implementation of a governance token using OpenZeppelin's ERC20Votes extension
+ * @notice This token enables on-chain governance with checkpointing capabilities
  */
 contract GovernanceToken is ERC20Votes {
-    // maximum supply of tokens (1e24 tokens)
-    uint256 public constant MAX_SUPPLY = 1000000000000000000000000;
+    // Maximum supply of tokens (1 million tokens with 18 decimals = 1e24 wei)
+    uint256 public constant MAX_SUPPLY = 1_000_000_000_000_000_000_000_000;
 
     /**
-     * @notice constructor that mints the total supply to the deployer
+     * @dev Initializes the contract with name, symbol and mints the total supply to the deployer
      */
     constructor() ERC20("GovernanceToken", "GT") ERC20Permit("GovernanceToken") {
         _mint(msg.sender, MAX_SUPPLY);
     }
 
     /**
-     * @notice hook called after any transfer of tokens
-     * @dev required override for erc20votes
+     * @dev Hook called after any transfer of tokens
+     * @param from The address tokens are transferred from
+     * @param to The address tokens are transferred to
+     * @param amount The amount of tokens transferred
+     * @notice Mandatory override for ERC20Votes to update vote checkpoints
      */
     function _afterTokenTransfer(
         address from,
@@ -31,16 +35,20 @@ contract GovernanceToken is ERC20Votes {
     }
 
     /**
-     * @notice mints tokens to a specified address
-     * @dev required override for erc20votes
+     * @dev Function to mint tokens
+     * @param to The address that will receive the minted tokens
+     * @param amount The amount of tokens to mint
+     * @notice Mandatory override for ERC20Votes to update vote checkpoints
      */
     function _mint(address to, uint256 amount) internal override {
         super._mint(to, amount);
     }
 
     /**
-     * @notice burns tokens from a specified account
-     * @dev required override for erc20votes
+     * @dev Function to burn tokens
+     * @param account The account whose tokens will be burnt
+     * @param amount The amount of tokens to burn
+     * @notice Mandatory override for ERC20Votes to update vote checkpoints
      */
     function _burn(address account, uint256 amount) internal override {
         super._burn(account, amount);
