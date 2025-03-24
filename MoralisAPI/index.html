@@ -55,6 +55,84 @@
         <p class="lead text-muted">Create and mint your own unique NFT on the blockchain</p>
       </header>
       
+      <!-- User Info Section -->
+      <form class="mb-5">
+        <h4 class="mb-3">User Information</h4>
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+        </div>
+        <div class="mb-3">
+          <label for="useremail" class="form-label">Email</label>
+          <input 
+            id="useremail" 
+            type="email" 
+            class="form-control" 
+            placeholder="Enter your email"
+            aria-label="Email"
+            required
+          >
+        </div>
+        <div class="text-center">
+          <button 
+            type="button" 
+            class="btn btn-primary" 
+            id="submit" 
+            onclick="login();"
+          >
+            Connect with MetaMask
+          </button>
+        </div>
+      </form>
+      <hr>
+
+      <!-- NFT Minting Section -->
+      <form>
+        <h4 class="mb-3">NFT Details</h4>
+        <div class="mb-3">
+          <label for="name" class="form-label">NFT Name</label>
+          <input 
+            disabled 
+            id="name" 
+            type="text" 
+            class="form-control" 
+            placeholder="Name of your NFT"
+            aria-label="NFT Name"
+          >
+        </div>
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <input 
+            disabled 
+            id="description" 
+            type="text" 
+            class="form-control" 
+            placeholder="Short description of your NFT"
+            aria-label="NFT Description"
+          >
+        </div>
+        <div class="mb-3">
+          <label for="file" class="form-label">NFT File</label>
+          <input 
+            type="file" 
+            disabled 
+            id="file" 
+            class="form-control"
+            aria-label="NFT File"
+          >
+        </div>
+        <div class="text-center">
+          <button 
+            disabled 
+            type="button" 
+            class="btn btn-success" 
+            id="upload" 
+            onclick="upload();"
+          >
+            Upload &amp; Mint
+          </button>
+        </div>
+      </form>
+
       <!-- User Authentication Section -->
       <section id="authentication-section" class="form-section">
         <h2 class="section-title">User Authentication</h2>
